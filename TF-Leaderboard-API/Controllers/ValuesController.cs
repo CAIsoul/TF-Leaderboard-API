@@ -162,20 +162,27 @@ namespace TF_Leaderboard_API.Controllers
 					{
 						while (reader.Read())
 						{
-							string ownerID = reader["ownerid"].ToString();
-							int casePoint = string.IsNullOrEmpty(reader["points"].ToString()) ? 0 : Convert.ToInt32(reader["points"].ToString());
-
-							if (!memberCases.ContainsKey(ownerID))
+							try
 							{
-								memberCases[ownerID] = new Member()
-								{
-									CaseNumber = 0,
-									TotalPoint = 0
-								};
-							}
+								string ownerID = reader["ownerid"].ToString();
+								double casePoint = string.IsNullOrEmpty(reader["points"].ToString()) ? 0 : Convert.ToDouble(reader["points"].ToString());
 
-							memberCases[ownerID].CaseNumber++;
-							memberCases[ownerID].TotalPoint += casePoint;
+								if (!memberCases.ContainsKey(ownerID))
+								{
+									memberCases[ownerID] = new Member()
+									{
+										CaseNumber = 0,
+										TotalPoint = 0
+									};
+								}
+
+								memberCases[ownerID].CaseNumber++;
+								memberCases[ownerID].TotalPoint += casePoint;
+							}
+							catch (Exception readException)
+							{
+								WriteToLog(readException.Message);
+							}
 						}
 					}
 				}
@@ -289,7 +296,7 @@ namespace TF_Leaderboard_API.Controllers
 		public string ID { get; set; }
 		public string Name { get; set; }
 		public int CaseNumber { get; set; }
-		public int TotalPoint { get; set; }
+		public double TotalPoint { get; set; }
 		public object ToData()
 		{
 			return new

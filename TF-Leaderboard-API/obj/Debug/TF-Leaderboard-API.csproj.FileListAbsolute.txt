@@ -82,4 +82,3 @@ C:\DevelopmentGit\playground\TF-Leaderboard-API\TF-Leaderboard-API\obj\Debug\TF-
 C:\DevelopmentGit\playground\TF-Leaderboard-API\TF-Leaderboard-API\bin\System.Web.Cors.dll
 C:\DevelopmentGit\playground\TF-Leaderboard-API\TF-Leaderboard-API\bin\System.Web.Http.Cors.dll
 C:\DevelopmentGit\playground\TF-Leaderboard-API\TF-Leaderboard-API\bin\System.Web.Http.Cors.xml
-C:\DevelopmentGit\playground\TF-Leaderboard-API\TF-Leaderboard-API\obj\Debug\TF-Leaderboard-API.csprojAssemblyReference.cache
