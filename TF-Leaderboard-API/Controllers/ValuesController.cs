@@ -48,6 +48,19 @@ namespace TF_Leaderboard_API.Controllers
 			return output;
 		}
 
+		[Route("getconfiguration")]
+		public Dictionary<string, string> GetConfiguration()
+		{
+			return GetConfigurationFromAccess();
+		}
+
+		[Route("saveconfiguration")]
+		[HttpPost]
+		public bool SavConfiguration([FromBody] Dictionary<string, string> settings)
+		{
+			return SaveConfigurationToAccess(settings);
+		}
+
 		[Route("getimages/{id}")]
 		public object GetImagesForTemplate(int id)
 		{
@@ -131,6 +144,7 @@ namespace TF_Leaderboard_API.Controllers
 				catch (Exception ex)
 				{
 					WriteToLog(ex.Message);
+					throw ex;
 				}
 			}
 
@@ -145,8 +159,8 @@ namespace TF_Leaderboard_API.Controllers
 		private Dictionary<string, Member> ReadCaseDataFromAccessDB(DateTime startDate, DateTime endDate)
 		{
 			string connectionString = String.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0}{1}", dataUrl, caseDbFileName); ;
-			string strSQL = string.Format("SELECT ownerid, owneridname, ownerteam, subjectidname, createdon, productidname, points FROM CASES " +
-				"WHERE DateValue(createdon) >= DateValue('{0}') AND DateValue(createdon) <= DateValue('{1}')", startDate.ToShortDateString(), endDate.ToShortDateString());
+			string strSQL = string.Format("SELECT ownerid, owneridname, ownerteam, subjectidname, new_resolvedon, productidname, points FROM CASES " +
+				"WHERE DateValue(new_resolvedon) >= DateValue('{0}') AND DateValue(new_resolvedon) <= DateValue('{1}')", startDate.ToShortDateString(), endDate.ToShortDateString());
 
 			Dictionary<string, Member> memberCases = new Dictionary<string, Member>();
 
@@ -182,6 +196,7 @@ namespace TF_Leaderboard_API.Controllers
 							catch (Exception readException)
 							{
 								WriteToLog(readException.Message);
+								throw readException;
 							}
 						}
 					}
@@ -189,6 +204,7 @@ namespace TF_Leaderboard_API.Controllers
 				catch (Exception ex)
 				{
 					WriteToLog(ex.Message);
+					throw ex;
 				}
 			}
 
@@ -237,6 +253,7 @@ namespace TF_Leaderboard_API.Controllers
 				catch (Exception ex)
 				{
 					WriteToLog(ex.Message);
+					throw ex;
 				}
 			}
 
@@ -245,6 +262,73 @@ namespace TF_Leaderboard_API.Controllers
 				icon = templateIcon,
 				teams = teamLogos
 			};
+		}
+
+		private Dictionary<string, string> GetConfigurationFromAccess()
+		{
+			string connectStr = String.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0}{1}", dataUrl, templateDbFileName);
+			string sqlStr = string.Format("select Key, Value from Configuration");
+
+			Dictionary<string, string> configuration = new Dictionary<string, string>();
+
+			using (OleDbConnection connect = new OleDbConnection(connectStr))
+			{
+				OleDbCommand command = new OleDbCommand(sqlStr, connect);
+
+				try
+				{
+					connect.Open();
+
+					using (OleDbDataReader reader = command.ExecuteReader())
+					{
+						while (reader.Read())
+						{
+							configuration.Add(reader["Key"].ToString(), reader["Value"].ToString());
+						}
+
+						connect.Close();
+					}
+				}
+				catch (Exception ex)
+				{
+					WriteToLog(ex.Message);
+					throw ex;
+				}
+			}
+
+			return configuration;
+		}
+
+		private bool SaveConfigurationToAccess(Dictionary<string, string> settings)
+		{
+			string connectStr = String.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0}{1}", dataUrl, templateDbFileName);
+
+			using (OleDbConnection connect = new OleDbConnection(connectStr))
+			{
+				try
+				{
+					connect.Open();
+
+					OleDbCommand command = new OleDbCommand();
+					command.Connection = connect;
+					command.CommandType = CommandType.Text;
+
+					foreach (string key in settings.Keys)
+					{
+						command.CommandText = string.Format("update Configuration set [Value] = '{0}' where [Key] = '{1}';", settings[key], key);
+						command.ExecuteNonQuery();
+					}
+
+					connect.Close();
+				}
+				catch (Exception ex)
+				{
+					WriteToLog(ex.Message);
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		private bool WriteToLog(string msg)
@@ -260,7 +344,7 @@ namespace TF_Leaderboard_API.Controllers
 			}
 			catch (Exception ex)
 			{
-				return false;
+				throw ex;
 			}
 		}
 
